@@ -128,9 +128,7 @@ public class HashMap<K, V> implements Map<K, V> {
 
     @Override
     public Set<Map.Entry<K, V>> entrySet() {
-        return Arrays.stream(table)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toSet());
+        return new EntrySet();
     }
 
     @Override
@@ -181,12 +179,10 @@ public class HashMap<K, V> implements Map<K, V> {
 
         private final K key;
         private V value;
-//        private int hash;
 
         public Entry(K key, V value) {
             this.key = key;
             this.value = value;
-//            this.hash = key.hashCode();
         }
 
         @Override
@@ -198,10 +194,6 @@ public class HashMap<K, V> implements Map<K, V> {
         public V getValue() {
             return value;
         }
-
-//        int hash() {
-//            return hash;
-//        }
 
         @Override
         public V setValue(V value) {
@@ -234,6 +226,122 @@ public class HashMap<K, V> implements Map<K, V> {
         @Override
         public String toString() {
             return key + "=" + value;
+        }
+    }
+
+    private class EntrySet implements Set<Map.Entry<K, V>> {
+
+        @Override
+        public int size() {
+            return HashMap.this.size();
+        }
+
+        @Override
+        public boolean isEmpty() {
+            return HashMap.this.isEmpty();
+        }
+
+        @Override
+        public boolean contains(Object o) {
+            return HashMap.this.containsKey(o);
+        }
+
+        @Override
+        public Iterator<Map.Entry<K, V>> iterator() {
+            return new Iterator<Map.Entry<K, V>>() {
+
+                int cursor = 0;
+                int lastRet = -1;
+
+                @Override
+                public boolean hasNext() {
+                    return cursor < table.length;
+                }
+
+                @Override
+                public Map.Entry<K, V> next() {
+                    if (!hasNext())
+                        throw new NoSuchElementException();
+                    lastRet = cursor++;
+                    return table[lastRet];
+                }
+
+                @Override
+                public void remove() {
+                    if (lastRet == -1)
+                        throw new IllegalStateException();
+                    table[lastRet] = null;
+                    lastRet = -1;
+                    HashMap.this.size--;
+                }
+            };
+        }
+
+        @Override
+        public Object[] toArray() {
+            //TODO
+            return new Object[0];
+        }
+
+        @Override
+        public <T> T[] toArray(T[] a) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        public boolean add(Map.Entry<K, V> kvEntry) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            return HashMap.this.remove(o) != null;
+        }
+
+        @Override
+        public boolean containsAll(Collection<?> c) {
+            for (Object o : c) {
+                if (!HashMap.this.containsKey(o))
+                    return false;
+            }
+            return true;
+        }
+
+        @Override
+        public boolean addAll(Collection<? extends Map.Entry<K, V>> c) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean retainAll(Collection<?> c) {
+            boolean result = false;
+            for (int i = 0; i < table.length; i++) {
+                Entry<K, V> e = table[i];
+                if (!c.contains(e)) {
+                    table[i] = null;
+                    HashMap.this.size--;
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public boolean removeAll(Collection<?> c) {
+            boolean result = false;
+            for (Object o : c) {
+                if (HashMap.this.containsKey(o)) {
+                    HashMap.this.remove(o);
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        @Override
+        public void clear() {
+            HashMap.this.clear();
         }
     }
 }
