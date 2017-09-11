@@ -76,7 +76,8 @@ public class HashMap<K, V> implements Map<K, V> {
             e.setValue(value);
         } else {
             int newSize = size + 1;
-            if (newSize == table.length)
+            int threshold = (int) (table.length * loadFactor);
+            if (newSize == threshold)
                 reinitialize();
             int index = getIndexByKey(key);
             addEntry(index, key, value);
